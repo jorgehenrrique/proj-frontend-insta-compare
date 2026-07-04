@@ -18,9 +18,10 @@ interface UploadedFile {
 
 interface FileUploaderProps {
   onDataChange: (followers: InstagramProfile[], following: InstagramProfile[]) => void;
+  onReset?: () => void;
 }
 
-export function FileUploader({ onDataChange }: FileUploaderProps) {
+export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
   const [uploaded, setUploaded] = useState<UploadedFile[]>([]);
   const [followersParsed, setFollowersParsed] = useState<InstagramProfile[]>([]);
   const [followingParsed, setFollowingParsed] = useState<InstagramProfile[]>([]);
@@ -82,7 +83,8 @@ export function FileUploader({ onDataChange }: FileUploaderProps) {
     setUploaded([]);
     setFollowersParsed([]);
     setFollowingParsed([]);
-  }, []);
+    onReset?.();
+  }, [onReset]);
 
   const hasFollowers = followers.length > 0;
   const hasFollowing = following.length > 0;

@@ -1,5 +1,6 @@
 import type { InstagramProfile } from '../types/instagram';
 import { Checkbox } from './Checkbox';
+import { CollapsibleSection } from './CollapsibleSection';
 import {
   dateFilterForYear,
   getAvailableYears,
@@ -91,8 +92,8 @@ export function DateFilterPanel({ profiles, value, onChange }: DateFilterPanelPr
         Filtrar por data de follow
       </Checkbox>
 
-      {value.enabled && (
-        <div className="mt-3 flex flex-col gap-3">
+      <CollapsibleSection open={value.enabled} className="mt-3">
+        <div className="flex flex-col gap-3 pb-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <YearMonthSelects
               label="De"
@@ -141,7 +142,7 @@ export function DateFilterPanel({ profiles, value, onChange }: DateFilterPanelPr
             </p>
           )}
         </div>
-      )}
+      </CollapsibleSection>
     </div>
   );
 }

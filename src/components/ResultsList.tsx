@@ -51,15 +51,19 @@ export function ResultsList({ profiles, checked, onToggle }: ResultsListProps) {
 
   if (profiles.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-surface px-6 py-14 text-center">
-        <p className="text-lg font-medium text-ink">Ninguém por aqui! 🎉</p>
-        <p className="mt-1 text-sm text-ink-muted">Todo mundo que você segue também te segue de volta.</p>
+      <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border bg-surface px-6 py-14 text-center">
+        <div>
+          <p className="text-lg font-medium text-ink">Ninguém por aqui! 🎉</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            Todo mundo que você segue também te segue de volta.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="search"
@@ -98,7 +102,7 @@ export function ResultsList({ profiles, checked, onToggle }: ResultsListProps) {
         )}
       </p>
 
-      <ul className="scrollbar-thin flex max-h-[560px] flex-col gap-2 overflow-y-auto pr-1">
+      <ul className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {visibleProfiles.map((profile) => (
           <UserCard key={profile.username} profile={profile} checked={checked.has(profile.username)} onToggle={onToggle} />
         ))}

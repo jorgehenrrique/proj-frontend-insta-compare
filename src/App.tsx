@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
-import { InstructionsPanel } from './components/InstructionsPanel';
-import { SecurityNotice } from './components/SecurityNotice';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileUploader } from './components/FileUploader';
-import { StatsBar } from './components/StatsBar';
-import { ResultsList } from './components/ResultsList';
+import { AppViewport } from './components/layout/AppViewport';
+import { HomePanel } from './components/layout/HomePanel';
+import { ResultsPanel } from './components/layout/ResultsPanel';
+import type { ActivePanel } from './components/layout/PanelNav';
 import { useCheckedUsers } from './hooks/useCheckedUsers';
 import { compareFollowersAndFollowing } from './utils/compareFollowers';
 import type { InstagramProfile } from './types/instagram';
@@ -11,6 +11,8 @@ import type { InstagramProfile } from './types/instagram';
 function App() {
   const [followers, setFollowers] = useState<InstagramProfile[]>([]);
   const [following, setFollowing] = useState<InstagramProfile[]>([]);
+  const [activePanel, setActivePanel] = useState<ActivePanel>('home');
+  const hadDataRef = useRef(false);
   const { checked, toggle } = useCheckedUsers();
 
   const handleDataChange = useCallback(
@@ -20,6 +22,10 @@ function App() {
     },
     [],
   );
+
+  const handleReset = useCallback(() => {
+    setActivePanel('home');
+  }, []);
 
   const { notFollowingBack } = useMemo(
     () => compareFollowersAndFollowing(followers, following),
@@ -33,58 +39,43 @@ function App() {
 
   const hasData = followers.length > 0 && following.length > 0;
 
+  useEffect(() => {
+    if (hasData && !hadDataRef.current) {
+      setActivePanel('results');
+    }
+    if (!hasData) {
+      setActivePanel('home');
+    }
+    hadDataRef.current = hasData;
+  }, [hasData]);
+
   return (
-    <div className='mx-auto flex min-h-svh max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6'>
-      <header className='flex flex-col items-center gap-2 text-center'>
-        <span className='rounded-full bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-sm font-semibold tracking-wide text-transparent uppercase'>
-          Insta Compare
-        </span>
-        <h1 className='text-3xl font-semibold tracking-tight text-ink sm:text-4xl'>
-          Quem não te segue de volta?
-        </h1>
-        <p className='max-w-xl text-ink-muted'>
-          Compare seus arquivos de seguidores e seguindo exportados do
-          Instagram, tudo processado localmente no seu navegador — nenhum dado é
-          enviado para servidores.
-        </p>
-      </header>
-
-      <InstructionsPanel />
-
-      <SecurityNotice />
-
-      <section className='flex flex-col gap-3'>
-        <h2 className='text-lg font-semibold text-ink'>Enviar arquivos</h2>
-        <FileUploader onDataChange={handleDataChange} />
-      </section>
-
-      {hasData && (
-        <section className='flex flex-col gap-4'>
-          <StatsBar
-            followingCount={following.length}
-            followersCount={followers.length}
-            notFollowingBackCount={notFollowingBack.length}
-            checkedCount={checkedInResults}
-          />
-
-          <div>
-            <h2 className='mb-3 text-lg font-semibold text-ink'>
-              Pessoas que você segue e não te seguem de volta
-            </h2>
-            <ResultsList
-              profiles={notFollowingBack}
-              checked={checked}
-              onToggle={toggle}
-            />
-          </div>
-        </section>
-      )}
-
-      <footer className='mt-auto pt-6 text-center text-xs text-ink-muted'>
-        Seus dados nunca saem do seu dispositivo — a comparação acontece
-        inteiramente no navegador.
-      </footer>
-    </div>
+    <AppViewport
+      activePanel={activePanel}
+      hasData={hasData}
+      onNavigate={setActivePanel}
+      home={
+        <HomePanel
+          hasData={hasData}
+          onGoToResults={() => setActivePanel('results')}
+          uploadSection={
+            <FileUploader onDataChange={handleDataChange} onReset={handleReset} />
+          }
+        />
+      }
+      results={
+        <ResultsPanel
+          onGoToHome={() => setActivePanel('home')}
+          followingCount={following.length}
+          followersCount={followers.length}
+          notFollowingBackCount={notFollowingBack.length}
+          checkedCount={checkedInResults}
+          profiles={notFollowingBack}
+          checked={checked}
+          onToggle={toggle}
+        />
+      }
+    />
   );
 }
 
