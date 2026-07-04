@@ -1,4 +1,5 @@
 import type { InstagramProfile } from '../types/instagram';
+import { Checkbox } from './Checkbox';
 
 interface UserCardProps {
   profile: InstagramProfile;
@@ -45,15 +46,16 @@ export function UserCard({ profile, checked, onToggle }: UserCardProps) {
         {followedAt && <p className="text-xs text-ink-muted">Você seguiu em {followedAt}</p>}
       </div>
 
-      <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-ink-muted">
+      <Checkbox
+        checked={checked}
+        onChange={() => onToggle(profile.username)}
+        size="md"
+        labelPosition="start"
+        labelClassName="text-sm text-ink-muted"
+        className="shrink-0"
+      >
         <span className="hidden sm:inline">Revisado</span>
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={() => onToggle(profile.username)}
-          className="h-5 w-5 cursor-pointer rounded border-border accent-brand-mid"
-        />
-      </label>
+      </Checkbox>
     </li>
   );
 }

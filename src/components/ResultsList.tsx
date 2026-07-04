@@ -1,5 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { InstagramProfile } from '../types/instagram';
+import {
+  getDefaultDateFilter,
+  profileMatchesDateFilter,
+  type DateFilterState,
+} from '../utils/dateFilter';
+import { Checkbox } from './Checkbox';
+import { DateFilterPanel } from './DateFilterPanel';
 import { UserCard } from './UserCard';
 
 type SortOrder = 'recent' | 'alphabetical';
@@ -14,6 +21,18 @@ export function ResultsList({ profiles, checked, onToggle }: ResultsListProps) {
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('recent');
   const [hideChecked, setHideChecked] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilterState>(() =>
+    getDefaultDateFilter(profiles),
+  );
+
+  useEffect(() => {
+    setDateFilter(getDefaultDateFilter(profiles));
+  }, [profiles]);
+
+  const profilesWithoutDate = useMemo(
+    () => profiles.filter((p) => p.followedAt === null).length,
+    [profiles],
+  );
 
   const visibleProfiles = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -21,13 +40,14 @@ export function ResultsList({ profiles, checked, onToggle }: ResultsListProps) {
     return profiles
       .filter((p) => !normalizedQuery || p.username.includes(normalizedQuery))
       .filter((p) => !hideChecked || !checked.has(p.username))
+      .filter((p) => profileMatchesDateFilter(p.followedAt, dateFilter))
       .sort((a, b) => {
         if (sortOrder === 'alphabetical') {
           return a.username.localeCompare(b.username);
         }
         return (b.followedAt ?? 0) - (a.followedAt ?? 0);
       });
-  }, [profiles, query, hideChecked, checked, sortOrder]);
+  }, [profiles, query, hideChecked, checked, sortOrder, dateFilter]);
 
   if (profiles.length === 0) {
     return (
@@ -59,20 +79,23 @@ export function ResultsList({ profiles, checked, onToggle }: ResultsListProps) {
             <option value="alphabetical">Ordem alfabética</option>
           </select>
 
-          <label className="flex items-center gap-2 text-sm text-ink-muted">
-            <input
-              type="checkbox"
-              checked={hideChecked}
-              onChange={(e) => setHideChecked(e.target.checked)}
-              className="h-4 w-4 rounded border-border accent-brand-mid"
-            />
+          <Checkbox
+            checked={hideChecked}
+            onChange={setHideChecked}
+            labelClassName="text-sm text-ink-muted"
+          >
             Ocultar revisados
-          </label>
+          </Checkbox>
         </div>
       </div>
 
+      <DateFilterPanel profiles={profiles} value={dateFilter} onChange={setDateFilter} />
+
       <p className="text-sm text-ink-muted">
         {visibleProfiles.length} de {profiles.length} perfis
+        {dateFilter.enabled && profilesWithoutDate > 0 && (
+          <span> · {profilesWithoutDate} sem data ocultos</span>
+        )}
       </p>
 
       <ul className="scrollbar-thin flex max-h-[560px] flex-col gap-2 overflow-y-auto pr-1">
