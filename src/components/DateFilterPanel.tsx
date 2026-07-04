@@ -1,9 +1,7 @@
-import type { InstagramProfile } from '../types/instagram';
 import { Checkbox } from './Checkbox';
 import { CollapsibleSection } from './CollapsibleSection';
 import {
   dateFilterForYear,
-  getAvailableYears,
   getMonthLabels,
   isDateFilterRangeInvalid,
   type DateFilterState,
@@ -11,9 +9,10 @@ import {
 } from '../utils/dateFilter';
 
 interface DateFilterPanelProps {
-  profiles: InstagramProfile[];
+  availableYears: number[];
   value: DateFilterState;
   onChange: (value: DateFilterState) => void;
+  label?: string;
 }
 
 const selectClassName =
@@ -67,8 +66,12 @@ function YearMonthSelects({
   );
 }
 
-export function DateFilterPanel({ profiles, value, onChange }: DateFilterPanelProps) {
-  const availableYears = getAvailableYears(profiles);
+export function DateFilterPanel({
+  availableYears,
+  value,
+  onChange,
+  label = 'Filtrar por data',
+}: DateFilterPanelProps) {
   const years =
     availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
   const rangeInvalid = isDateFilterRangeInvalid(value);
@@ -89,7 +92,7 @@ export function DateFilterPanel({ profiles, value, onChange }: DateFilterPanelPr
         onChange={(enabled) => onChange({ ...value, enabled })}
         labelClassName="text-sm font-medium text-ink"
       >
-        Filtrar por data de follow
+        {label}
       </Checkbox>
 
       <CollapsibleSection open={value.enabled} className="mt-3">

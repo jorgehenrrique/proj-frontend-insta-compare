@@ -86,6 +86,13 @@ export interface ParsedFile {
   profiles: InstagramProfile[];
 }
 
+export function parseInstagramJson(json: unknown, fileName: string): ParsedFile {
+  const kind = detectFileKind(json, fileName);
+  const profiles = kind === 'followers' ? parseFollowersJson(json) : parseFollowingJson(json);
+
+  return { kind, fileName, profiles };
+}
+
 export async function parseInstagramFile(file: File): Promise<ParsedFile> {
   const text = await file.text();
 
@@ -96,10 +103,7 @@ export async function parseInstagramFile(file: File): Promise<ParsedFile> {
     throw new InstagramParseError('Não foi possível ler o JSON deste arquivo.', file.name);
   }
 
-  const kind = detectFileKind(json, file.name);
-  const profiles = kind === 'followers' ? parseFollowersJson(json) : parseFollowingJson(json);
-
-  return { kind, fileName: file.name, profiles };
+  return parseInstagramJson(json, file.name);
 }
 
 export function mergeProfilesByUsername(profiles: InstagramProfile[]): InstagramProfile[] {

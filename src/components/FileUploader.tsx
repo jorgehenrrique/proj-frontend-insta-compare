@@ -1,30 +1,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { InstagramProfile, OptionalProfileData } from '../types/instagram';
 import {
   InstagramParseError,
   mergeProfilesByUsername,
-  parseInstagramFile,
+  parseInstagramJson,
   type ParsedFile,
 } from '../utils/parseInstagramData';
-import type { InstagramProfile } from '../types/instagram';
+import {
+  createEmptyOptionalData,
+  mergeOptionalData,
+  OPTIONAL_FILE_LABELS,
+  parseOptionalInstagramFile,
+  type OptionalFileKind,
+} from '../utils/parseOptionalProfiles';
+import { ClearAllButton } from './CollapseToggleIcon';
 
 interface UploadedFile {
   id: string;
   fileName: string;
   status: 'ok' | 'error';
   kind?: ParsedFile['kind'];
+  optionalKind?: OptionalFileKind;
   count?: number;
   error?: string;
 }
 
 interface FileUploaderProps {
   onDataChange: (followers: InstagramProfile[], following: InstagramProfile[]) => void;
+  onOptionalDataChange?: (data: OptionalProfileData) => void;
   onReset?: () => void;
 }
 
-export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
+function fileKindLabel(upload: UploadedFile): string {
+  if (upload.optionalKind) {
+    return OPTIONAL_FILE_LABELS[upload.optionalKind];
+  }
+  if (upload.kind === 'followers') return 'seguidores';
+  if (upload.kind === 'following') return 'seguindo';
+  return 'perfis';
+}
+
+export function FileUploader({ onDataChange, onOptionalDataChange, onReset }: FileUploaderProps) {
   const [uploaded, setUploaded] = useState<UploadedFile[]>([]);
   const [followersParsed, setFollowersParsed] = useState<InstagramProfile[]>([]);
   const [followingParsed, setFollowingParsed] = useState<InstagramProfile[]>([]);
+  const [optionalData, setOptionalData] = useState<OptionalProfileData>(createEmptyOptionalData);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,13 +55,45 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
     onDataChange(followers, following);
   }, [followers, following, onDataChange]);
 
+  useEffect(() => {
+    onOptionalDataChange?.(optionalData);
+  }, [optionalData, onOptionalDataChange]);
+
   const handleFiles = useCallback(async (fileList: FileList | File[]) => {
     const files = Array.from(fileList).filter((f) => f.name.endsWith('.json'));
 
     for (const file of files) {
       const id = `${file.name}-${file.size}-${file.lastModified}`;
+
+      let json: unknown;
       try {
-        const parsed = await parseInstagramFile(file);
+        json = JSON.parse(await file.text());
+      } catch {
+        setUploaded((prev) => [
+          ...prev.filter((u) => u.id !== id),
+          { id, fileName: file.name, status: 'error', error: 'Não foi possível ler o JSON deste arquivo.' },
+        ]);
+        continue;
+      }
+
+      const optional = parseOptionalInstagramFile(file.name, json);
+      if (optional) {
+        setOptionalData((prev) => mergeOptionalData(prev, optional.kind, optional.entries));
+        setUploaded((prev) => [
+          ...prev.filter((u) => u.id !== id),
+          {
+            id,
+            fileName: file.name,
+            status: 'ok',
+            optionalKind: optional.kind,
+            count: optional.entries.length,
+          },
+        ]);
+        continue;
+      }
+
+      try {
+        const parsed = parseInstagramJson(json, file.name);
         setUploaded((prev) => [
           ...prev.filter((u) => u.id !== id),
           { id, fileName: file.name, status: 'ok', kind: parsed.kind, count: parsed.profiles.length },
@@ -52,8 +104,12 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
           setFollowingParsed((prev) => [...prev, ...parsed.profiles]);
         }
       } catch (err) {
-        const message = err instanceof InstagramParseError ? err.message : 'Erro inesperado ao ler o arquivo.';
-        setUploaded((prev) => [...prev.filter((u) => u.id !== id), { id, fileName: file.name, status: 'error', error: message }]);
+        const message =
+          err instanceof InstagramParseError ? err.message : 'Erro inesperado ao ler o arquivo.';
+        setUploaded((prev) => [
+          ...prev.filter((u) => u.id !== id),
+          { id, fileName: file.name, status: 'error', error: message },
+        ]);
       }
     }
   }, []);
@@ -83,11 +139,13 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
     setUploaded([]);
     setFollowersParsed([]);
     setFollowingParsed([]);
+    setOptionalData(createEmptyOptionalData());
     onReset?.();
   }, [onReset]);
 
   const hasFollowers = followers.length > 0;
   const hasFollowing = following.length > 0;
+  const optionalCount = optionalData.loadedKinds.length;
 
   return (
     <div className="w-full">
@@ -123,7 +181,14 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
         <p className="max-w-md text-sm text-ink-muted">
           Envie <code className="rounded bg-surface-muted px-1.5 py-0.5">following.json</code> e{' '}
           <code className="rounded bg-surface-muted px-1.5 py-0.5">followers_1.json</code> (e
-          followers_2.json, followers_3.json... se existirem). Você pode selecionar todos de uma vez.
+          followers_2.json, followers_3.json... se existirem). Você pode selecionar todos de uma
+          vez.
+        </p>
+        <p className="max-w-md text-xs text-ink-muted">
+          Opcional: <code className="rounded bg-surface-muted px-1 py-0.5">close_friends.json</code>,{' '}
+          <code className="rounded bg-surface-muted px-1 py-0.5">restricted_profiles.json</code>,{' '}
+          <code className="rounded bg-surface-muted px-1 py-0.5">hide_story_from.json</code> e outros
+          da pasta do export.
         </p>
       </div>
 
@@ -134,7 +199,9 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
               key={u.id}
               className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-sm ${
                 u.status === 'ok'
-                  ? 'border-border bg-surface'
+                  ? u.optionalKind
+                    ? 'border-brand-mid/30 bg-brand-mid/5'
+                    : 'border-border bg-surface'
                   : 'border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/40'
               }`}
             >
@@ -144,28 +211,27 @@ export function FileUploader({ onDataChange, onReset }: FileUploaderProps) {
               </div>
               <span className="shrink-0 text-ink-muted">
                 {u.status === 'ok'
-                  ? `${u.kind === 'followers' ? 'seguidores' : 'seguindo'} · ${u.count} perfis`
+                  ? `${fileKindLabel(u)} · ${u.count}`
                   : u.error}
               </span>
             </div>
           ))}
 
           <div className="mt-2 flex items-center justify-between text-sm">
-            <div className="flex gap-4 text-ink-muted">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-ink-muted">
               <span className={hasFollowing ? 'text-ink' : ''}>
                 Seguindo: <strong>{following.length || '—'}</strong>
               </span>
               <span className={hasFollowers ? 'text-ink' : ''}>
                 Seguidores: <strong>{followers.length || '—'}</strong>
               </span>
+              {optionalCount > 0 && (
+                <span className="text-brand-mid">
+                  Extras: <strong>{optionalCount}</strong> arquivo{optionalCount > 1 ? 's' : ''}
+                </span>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="text-ink-muted underline-offset-2 hover:text-ink hover:underline"
-            >
-              Limpar tudo
-            </button>
+            <ClearAllButton onClick={handleReset} />
           </div>
         </div>
       )}

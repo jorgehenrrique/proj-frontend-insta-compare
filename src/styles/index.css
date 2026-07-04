@@ -47,25 +47,118 @@ body {
 }
 
 .panel-page {
-  width: 50%;
   height: 100%;
   flex-shrink: 0;
 }
 
-.panel-scroll {
-  height: 100%;
+.panel-page-scroll {
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.panel-page-fixed {
+  overflow: hidden;
 }
 
 ::selection {
   background: color-mix(in srgb, var(--color-brand-mid) 30%, transparent);
 }
 
-.scrollbar-thin::-webkit-scrollbar {
-  width: 8px;
+/* Scrollbar base — trilho invisível, thumb discreto */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-brand-mid) 45%, var(--color-border)) transparent;
 }
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: color-mix(in srgb, var(--color-brand-mid) 38%, var(--color-border));
+  border: 2px solid transparent;
+  background-clip: padding-box;
   border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-brand-mid) 58%, var(--color-border));
+  background-clip: padding-box;
+}
+
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Lista de perfis — só a barra, ainda mais fina e sutil */
+.scrollbar-list {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-brand-mid) 42%, transparent) transparent;
+}
+
+.scrollbar-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-brand-mid) 35%, transparent);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+
+.scrollbar-list:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-brand-mid) 52%, transparent);
+  background-clip: padding-box;
+}
+
+.scrollbar-list::-webkit-scrollbar-thumb:active {
+  background: color-mix(in srgb, var(--color-brand-mid) 68%, transparent);
+  background-clip: padding-box;
+}
+
+/* Fade suave nas bordas das listas scrolláveis */
+.scroll-fade-wrap {
+  position: relative;
+  min-height: 0;
+}
+
+.scroll-fade-edges {
+  --scroll-fade: 20px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 12%) calc(var(--scroll-fade) * 0.25),
+    rgb(0 0 0 / 45%) calc(var(--scroll-fade) * 0.55),
+    rgb(0 0 0 / 78%) calc(var(--scroll-fade) * 0.85),
+    #000 var(--scroll-fade),
+    #000 calc(100% - var(--scroll-fade)),
+    rgb(0 0 0 / 78%) calc(100% - var(--scroll-fade) * 0.85),
+    rgb(0 0 0 / 45%) calc(100% - var(--scroll-fade) * 0.55),
+    rgb(0 0 0 / 12%) calc(100% - var(--scroll-fade) * 0.25),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 12%) calc(var(--scroll-fade) * 0.25),
+    rgb(0 0 0 / 45%) calc(var(--scroll-fade) * 0.55),
+    rgb(0 0 0 / 78%) calc(var(--scroll-fade) * 0.85),
+    #000 var(--scroll-fade),
+    #000 calc(100% - var(--scroll-fade)),
+    rgb(0 0 0 / 78%) calc(100% - var(--scroll-fade) * 0.85),
+    rgb(0 0 0 / 45%) calc(100% - var(--scroll-fade) * 0.55),
+    rgb(0 0 0 / 12%) calc(100% - var(--scroll-fade) * 0.25),
+    transparent 100%
+  );
 }

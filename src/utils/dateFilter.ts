@@ -59,8 +59,15 @@ export function profileMatchesDateFilter(
   followedAt: number | null,
   filter: DateFilterState,
 ): boolean {
+  return timestampMatchesDateFilter(followedAt, filter);
+}
+
+export function timestampMatchesDateFilter(
+  timestamp: number | null,
+  filter: DateFilterState,
+): boolean {
   if (!filter.enabled) return true;
-  if (followedAt === null) return false;
+  if (timestamp === null) return false;
   if (isDateFilterRangeInvalid(filter)) return true;
 
   const fromStart = yearMonthRangeStart(filter.from);
@@ -68,7 +75,43 @@ export function profileMatchesDateFilter(
     ? Math.floor(Date.now() / 1000)
     : yearMonthRangeEnd(filter.to);
 
-  return followedAt >= fromStart && followedAt <= toEnd;
+  return timestamp >= fromStart && timestamp <= toEnd;
+}
+
+export function getAvailableYearsFromTimestamps(timestamps: (number | null)[]): number[] {
+  const years = new Set<number>();
+  for (const ts of timestamps) {
+    if (ts !== null) {
+      years.add(getYearMonthFromTimestamp(ts).year);
+    }
+  }
+  return [...years].sort((a, b) => a - b);
+}
+
+export function getDefaultDateFilterFromTimestamps(
+  timestamps: (number | null)[],
+): DateFilterState {
+  const valid = timestamps.filter((ts): ts is number => ts !== null);
+
+  if (valid.length === 0) {
+    const now = currentYearMonth();
+    return {
+      enabled: false,
+      from: { year: now.year, month: 1 },
+      untilPresent: true,
+      to: now,
+    };
+  }
+
+  const oldest = valid.reduce((min, ts) => (ts < min ? ts : min), valid[0]);
+  const newest = valid.reduce((max, ts) => (ts > max ? ts : max), valid[0]);
+
+  return {
+    enabled: false,
+    from: getYearMonthFromTimestamp(oldest),
+    untilPresent: true,
+    to: getYearMonthFromTimestamp(newest),
+  };
 }
 
 export function getAvailableYears(profiles: InstagramProfile[]): number[] {

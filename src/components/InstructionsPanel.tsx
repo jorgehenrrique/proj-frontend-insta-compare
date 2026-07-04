@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { CollapseToggleIcon, collapseTriggerClassName } from './CollapseToggleIcon';
+import { CollapsibleSection } from './CollapsibleSection';
 import { ExportWalkthrough } from './walkthrough/ExportWalkthrough';
 import { UploadWalkthrough } from './walkthrough/UploadWalkthrough';
 
@@ -24,7 +26,7 @@ const STEPS = [
   {
     title: 'Escolha o que exportar',
     detail:
-      'Em "Personalizar informações" você pode selecionar apenas "Conexões" (seguidores e seguindo) para deixar o arquivo bem menor e mais rápido de gerar.',
+      'Em "Personalizar informações", selecione "Conexões" (seguidores e seguindo) — necessário para a comparação principal. Se quiser contexto extra na análise (Close Friends, restritos, pedidos pendentes, bloqueados, etc.), inclua também os demais itens dessa seção ou envie depois os arquivos extras da pasta followers_and_following.',
   },
   {
     title: 'Destino, formato e qualidade',
@@ -50,7 +52,7 @@ const UPLOAD_STEPS = [
   {
     title: 'Localize os arquivos certos',
     detail:
-      'Acesse connections/followers_and_following/ e localize following.json e followers_1.json (followers_2.json, followers_3.json... se você seguir muita gente, o Instagram divide em blocos).',
+      'Acesse connections/followers_and_following/ e localize following.json e followers_1.json (followers_2.json, followers_3.json... se você seguir muita gente, o Instagram divide em blocos). Opcionalmente, envie também close_friends.json, restricted_profiles.json, pending_follow_requests.json e outros da mesma pasta para enriquecer a análise.',
   },
   {
     title: 'Envie na área abaixo',
@@ -66,7 +68,8 @@ export function InstructionsPanel() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+        className={`${collapseTriggerClassName} px-5 py-4`}
+        aria-expanded={open}
       >
         <div className="flex items-center gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-brand-start via-brand-mid to-brand-end text-sm font-semibold text-white">
@@ -79,15 +82,10 @@ export function InstructionsPanel() {
             </p>
           </div>
         </div>
-        <span
-          className={`shrink-0 text-ink-muted transition-transform ${open ? 'rotate-180' : ''}`}
-          aria-hidden="true"
-        >
-          ▾
-        </span>
+        <CollapseToggleIcon open={open} />
       </button>
 
-      {open && (
+      <CollapsibleSection open={open}>
         <div className="flex flex-col gap-8 border-t border-border px-5 py-5">
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
@@ -133,7 +131,7 @@ export function InstructionsPanel() {
             As telas acima são apenas uma demonstração ilustrativa (conta e dados fictícios).
           </p>
         </div>
-      )}
+      </CollapsibleSection>
     </section>
   );
 }

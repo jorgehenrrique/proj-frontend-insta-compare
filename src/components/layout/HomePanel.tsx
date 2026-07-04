@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { PrimaryNavButton } from '../CollapseToggleIcon';
 import { InstructionsPanel } from '../InstructionsPanel';
 import { SecurityNotice } from '../SecurityNotice';
 
@@ -10,7 +11,7 @@ interface HomePanelProps {
 
 export function HomePanel({ hasData, onGoToResults, uploadSection }: HomePanelProps) {
   return (
-    <div className="panel-scroll mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 py-10 pb-24 sm:px-6 sm:pb-10">
+    <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 py-10 pb-24 sm:px-6 sm:pb-10">
       <header className="flex flex-col items-center gap-2 text-center">
         <span className="rounded-full bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-sm font-semibold tracking-wide text-transparent uppercase">
           Insta Compare
@@ -32,13 +33,9 @@ export function HomePanel({ hasData, onGoToResults, uploadSection }: HomePanelPr
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-ink">Enviar arquivos</h2>
           {hasData && (
-            <button
-              type="button"
-              onClick={onGoToResults}
-              className="hidden items-center gap-1 rounded-full bg-linear-to-r from-brand-start via-brand-mid to-brand-end px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90 sm:inline-flex"
-            >
+            <PrimaryNavButton onClick={onGoToResults} className="hidden sm:inline-flex">
               Ver resultados →
-            </button>
+            </PrimaryNavButton>
           )}
         </div>
         {uploadSection}
@@ -46,13 +43,9 @@ export function HomePanel({ hasData, onGoToResults, uploadSection }: HomePanelPr
 
       {hasData && (
         <div className="sm:hidden">
-          <button
-            type="button"
-            onClick={onGoToResults}
-            className="w-full rounded-xl bg-linear-to-r from-brand-start via-brand-mid to-brand-end px-4 py-3 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-          >
+          <PrimaryNavButton onClick={onGoToResults} className="w-full rounded-xl py-3">
             Ver resultados →
-          </button>
+          </PrimaryNavButton>
         </div>
       )}
 

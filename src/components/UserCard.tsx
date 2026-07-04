@@ -1,10 +1,12 @@
-import type { InstagramProfile } from '../types/instagram';
+import type { InstagramProfile, ProfileContext } from '../types/instagram';
 import { Checkbox } from './Checkbox';
+import { ProfileBadges } from './ProfileBadges';
 
 interface UserCardProps {
   profile: InstagramProfile;
   checked: boolean;
   onToggle: (username: string) => void;
+  context?: ProfileContext | null;
 }
 
 function formatDate(timestamp: number | null): string | null {
@@ -16,8 +18,9 @@ function formatDate(timestamp: number | null): string | null {
   });
 }
 
-export function UserCard({ profile, checked, onToggle }: UserCardProps) {
+export function UserCard({ profile, checked, onToggle, context }: UserCardProps) {
   const followedAt = formatDate(profile.followedAt);
+  const displayName = context?.displayName;
 
   return (
     <li
@@ -43,7 +46,11 @@ export function UserCard({ profile, checked, onToggle }: UserCardProps) {
         >
           @{profile.username}
         </a>
+        {displayName && displayName !== profile.username && (
+          <p className="truncate text-xs text-ink-muted">{displayName}</p>
+        )}
         {followedAt && <p className="text-xs text-ink-muted">Você seguiu em {followedAt}</p>}
+        {context?.tags && <ProfileBadges tags={context.tags} />}
       </div>
 
       <Checkbox
